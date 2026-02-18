@@ -190,11 +190,7 @@ INSERT INTO tb_inss (faixa_inicial, faixa_final, aliquota) VALUES
 (3000.01, 5000, 12),
 (5000.01, 999999, 14);
 
-SELECT * FROM funcionarios;
-SELECT * FROM cargos;
-SELECT * FROM departamentos;
-SELECT * FROM tb_inss;
--- call gerar_folha_mensal('2025-05-01');
-SELECT * FROM folha_pagamento;
-delete from funcionarios
-where id_funcionario = 1;
+-- Inserindo os dados dos eventos fixos da folha (Gratificação, insalubridade e plano de saúde
+
+INSERT INTO fixos_folha(gratificacao, insalubridade, plano_saude)
+VALUES (1000.00, 400.00, 600);

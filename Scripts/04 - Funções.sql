@@ -1,4 +1,7 @@
 
+-- --------------------------------------------------------------------------------------------
+-- --------------------------------------------------------------------------------------------
+-- --------------------------------------------------------------------------------------------
 /* 
 Função para calcular INSS
 Ela vai buscar na tabela de INSS (tb_inss) a aliquota filtrando o salario que foi informado se está entre o valor minimo e calor maximo de cada faixa, 
@@ -27,9 +30,13 @@ END $$
 
 DELIMITER ;
 
-
--- Função para calcular IRRF
--- Fiz de forma bruta, se ganha acima de 5.000,00 é aplicado 27,5% se for menos não tem desconto, sei que não funciona assim mas fica pra uma futura melhoria.
+-- --------------------------------------------------------------------------------------------
+-- --------------------------------------------------------------------------------------------
+-- --------------------------------------------------------------------------------------------
+/* 
+Função para calcular IRRF
+Fiz de forma bruta, se ganha acima de 5.000,00 é aplicado 27,5% se for menos não tem desconto, sei que não funciona assim mas fica pra uma futura melhoria.
+*/
 
 DELIMITER $$
 
@@ -49,7 +56,3 @@ BEGIN
 END $$
 
 DELIMITER ;
-
-select calcula_inss(2500);
-select calcula_irrf(2500);
--- Função para calcular IRRF
