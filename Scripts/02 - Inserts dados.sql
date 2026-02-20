@@ -190,7 +190,17 @@ INSERT INTO tb_inss (faixa_inicial, faixa_final, aliquota) VALUES
 (3000.01, 5000, 12),
 (5000.01, 999999, 14);
 
--- Inserindo os dados dos eventos fixos da folha (Gratificação, insalubridade e plano de saúde
+-- Inserindo os dados dos eventos fixos da folha (Gratificação, insalubridade e Periculosidade
 
-INSERT INTO fixos_folha(gratificacao, insalubridade, plano_saude)
-VALUES (1000.00, 400.00, 600);
+INSERT INTO eventos_fixos(nome, valor, percentual, tipo)
+VALUES 
+('Sem beneficio', 0, 0, 'provento'),
+('Gratificacao Dir', 1000.00, 0, 'provento'),
+('Gratificacao Ger', 500.00, 0, 'provento'),
+('Inssalubridade Min', 162.10, 0, 'provento'),
+('Inssalubridade Med', 324.20, 0, 'provento'),
+('Inssalubridade Max', 648.40, 0, 'provento'),
+('Periculosidade', 0, 0.30, 'provento');
+
+-- select * from eventos_fixos;
+

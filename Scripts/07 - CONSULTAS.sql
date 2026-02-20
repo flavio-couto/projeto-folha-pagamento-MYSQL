@@ -1,3 +1,7 @@
+SELECT * FROM funcionarios;
+SELECT * FROM cargos;
+SELECT * FROM folha_pagamento;
+call gerar_folha_mensal('2025-05-01');
 -- consultas
 
 /* 
@@ -62,3 +66,4 @@ group by c.nome, f.sexo;
 -- Distribuição por tipo de cargo
 -- Custo total da folha
 
+SELECT * FROM folha_pagamento;
