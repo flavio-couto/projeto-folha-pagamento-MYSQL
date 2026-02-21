@@ -23,23 +23,26 @@ Simular um sistema simplificado de folha de pagamento contendo:
 - Análise por tipo de despesa
 - Distribuição por sexo
 - Criação de View com nome do cargo e departamento além da idade calculada
-
+- Mapa do Plano de Saúde
 
 
 ## 🔄 Próximas etapas
-- Cálculo progressivo completo de IRRF (pendente);
-- Rafazer o insert de funcionários colocando o código dos eventos fixos e do plano de saúde;
+
+
+- Melhorar cálculo dos impostos patronais, talvez criar sua própria tabela e seu procedure, ver se dá pra juntar já no cálculo da folha geral
 - Ajustar a procedure do cálculo de folha para adaptar a criação das novas tabelas do plano de saúde e eventos fixos;
 - Criar uma tabela de ausencias ou afastamentos pra poder proporcionalizar as coisas;
 - Histórico salarial (pendente - não sei se vou conseguir, deixar pro futuro)
-- Melhorar cálculo dos impostos patronais, talvez criar sua própria tabela e seu procedure, ver se dá pra juntar já no cálculo da folha geral
+
 
 - ESSA É MUITO IMPORTANTE MAS ACHO QUE FICA PRO FINAL, AO INVES DE FAZER O CALCULO DA FOLHA VIA 'CURSOR' (ENTENDER MELHOR O QUE É ISSO DEPOIS), FAZER A INCLUSÃO VIA INSERT, CHAT TINHA ME SUGERIDO NÃO SABIA COMO FAZER E NÃO QUERIA QUE ELE ME RESPONDESSE COMO FARIA MAS ESSE PROJETO TEM ABERTO MINHA MENTE E ACHO QUE SEI COMO FAREI ISSO AGORA, MAS SERÁ UM POUCO TRABALHOSO E CONFUSO ENTÃO FAREI MAIS PARA O FINAL, QUANDO JÁ ESTIVER COM A MAIORIA DAS FUNÇÕES CRIADAS E TUDO RODANDO MELHOR.
 
 ## 🔄 CONCLUÍDOS
 
-- Refatoração da Tabela eventos_fixos (antiga fixos_folha)- OK
+- Refatoração da Tabela eventos_fixos (antiga fixos_folha), modelo horizontal para vertical- OK
 - Simulação de encargos (FGTS, INSS empresa) - OK 
+- Cálculo progressivo completo de IRRF - OK;
+- Rafazer o insert de funcionários colocando o código dos eventos fixos e do plano de saúde - OK;
 
 
 **** TABELAS ****

@@ -33,10 +33,57 @@ DELIMITER ;
 -- --------------------------------------------------------------------------------------------
 -- --------------------------------------------------------------------------------------------
 -- --------------------------------------------------------------------------------------------
+
 /* 
 Função para calcular IRRF
-Fiz de forma bruta, se ganha acima de 5.000,00 é aplicado 27,5% se for menos não tem desconto, sei que não funciona assim mas fica pra uma futura melhoria.
+Ela faz o cálculo mais complexo conforme a legislação, preciso apenas confirmar se usei o modelo correto pois tem muita informação divergente sobre o novo cálculo do INSSvai buscar na tabela.
+Como a alíquota ou é 0 ou é 27.5% eu coloquei o cálculo todo dentro da função, diferente da do INSS que ele busca as alíquotas numa tabela separada.
+Quero ajustar na verdade mas não vejo necessidade.
 */
+
+DELIMITER $$
+
+CREATE FUNCTION calcula_irrf5(IDfuncionario INT, valor_apos_desconto_inss DECIMAL(10,2))
+	RETURNS decimal(10,2)
+    deterministic
+    
+BEGIN
+
+	declare v_salario DECIMAL(10,2);
+    declare v_desconto_irrf DECIMAL(10,2);
+    declare v_desconto_sem_redutor DECIMAL(10,2);
+    declare v_redutor DECIMAL(10,2);
+    declare resultado varchar(500);
+        
+	select salario
+    INTO v_salario
+    FROM funcionarios
+    WHERE id_funcionario = IDfuncionario;
+        
+    IF valor_apos_desconto_inss < 5000.00 THEN
+		SET v_desconto_irrf = 0;
+    ELSE 
+		SET v_desconto_sem_redutor = (valor_apos_desconto_inss * 0.275) - 908.75;
+		SET v_redutor = 978.62 - (v_salario * 0.133145);
+        SET v_desconto_irrf = v_desconto_sem_redutor - v_redutor;
+		               
+    END IF;
+    
+    RETURN v_desconto_irrf;
+    
+END $$
+
+DELIMITER ;
+
+-- ------------------------------------------
+-- ------------------------------------------
+-- ------------------------------------------
+
+/* 
+Função para calcular IRRF
+Essa eu tinha feito de forma bruta, se ganha acima de 5.000,00 é aplicado 27,5% se for menos não tem desconto, sei que não funciona assim mas fica pra uma futura melhoria.
+Vou deixar de histórico
+
 
 DELIMITER $$
 
@@ -56,3 +103,5 @@ BEGIN
 END $$
 
 DELIMITER ;
+
+*/

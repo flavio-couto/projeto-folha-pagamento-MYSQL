@@ -67,3 +67,7 @@ group by c.nome, f.sexo;
 -- Custo total da folha
 
 SELECT * FROM folha_pagamento;
+
+-- Mapa Plano de Saúde
+SELECT f.nome, ps.nome, ps.valor FROM funcionarios f
+JOIN plano_saude ps on ps.id_planoS = f.id_plano_saude;

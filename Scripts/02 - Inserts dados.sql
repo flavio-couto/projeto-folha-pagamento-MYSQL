@@ -1,4 +1,7 @@
+-- -----------------------------------------------------------------------------
 -- Criando os Departamentos
+-- -----------------------------------------------------------------------------
+
 INSERT INTO departamentos(nome, despesa)
 values
 ('RH', 'indireta'),
@@ -11,7 +14,10 @@ values
 ('Servicos Gerais', 'direta'),
 ('Diretoria', 'indireta');
 
+-- -----------------------------------------------------------------------------
 -- Criando os cargos
+-- -----------------------------------------------------------------------------
+
 INSERT INTO cargos (nome, tipo)
 values
 ('Auxiliar administrativo', 'Operacional'),
@@ -24,8 +30,52 @@ values
 ('Gerente', 'Estrategico'),
 ('Diretor', 'Estrategico');
 
+-- -----------------------------------------------------------------------------
+-- Inserindo os dados da tabela de INSS
+-- -----------------------------------------------------------------------------
+
+INSERT INTO tb_inss (faixa_inicial, faixa_final, aliquota) VALUES
+(0, 1500, 7.5),
+(1500.01, 3000, 9),
+(3000.01, 5000, 12),
+(5000.01, 999999, 14);
+
+-- -----------------------------------------------------------------------------
+-- Inserindo os dados dos eventos fixos da folha (Gratificação, insalubridade e Periculosidade
+-- -----------------------------------------------------------------------------
+
+INSERT INTO eventos_fixos(nome, valor, percentual, tipo)
+VALUES 
+('Sem beneficio', 0, 0, 'provento'),
+('Gratificacao Dir', 1000.00, 0, 'provento'),
+('Gratificacao Ger', 500.00, 0, 'provento'),
+('Inssalubridade Min', 162.10, 0, 'provento'),
+('Inssalubridade Med', 324.20, 0, 'provento'),
+('Inssalubridade Max', 648.40, 0, 'provento'),
+('Periculosidade', 0, 0.30, 'provento');
+
+-- -----------------------------------------------------------------------------
+-- Inserindo os dados dos planos de saúde (Basico, Intermediario e Premium) // 30% colaborador, 70% empresa
+-- -----------------------------------------------------------------------------
+
+INSERT INTO plano_saude(nome, valor, parte_colaborador, parte_empresa)
+VALUES 
+('Sem plano', 0, 0, 0),
+('Basico', 300.00, 90, 210),
+('Intermediario', 500.00, 150.00, 350.00),
+('Premium', 1000.00, 300.00, 700.00);
+
+-- -----------------------------------------------------------------------------
+-- -----------------------------------------------------------------------------
 -- Inserindo os dados dos funcionários.
-INSERT INTO funcionarios (id_funcionario, nome, data_nascimento, sexo, admissao, demissao, salario, id_cargo, id_departamento, ativo) VALUES
+-- -----------------------------------------------------------------------------
+-- -----------------------------------------------------------------------------
+/*
+select * from plano_saude;
+select * from cargos;
+select * from eventos_fixos;
+
+INSERT INTO funcionarios (id_funcionario, nome, data_nascimento, sexo, admissao, demissao, salario, id_cargo, id_departamento, id_evento_fixo, id_plano_saude, ativo) VALUES
 -- DIRETORES (2)
 (1, 'Carlos Alberto Silva', '1975-03-12', 'masculino', '2010-01-05', NULL, 18500.00, 9, 9, 'Sim'),
 (2, 'Mariana Souza Leme', '1980-07-22', 'feminino','2012-05-15', NULL, 17800.00, 9, 9, 'Sim'),
@@ -182,25 +232,14 @@ INSERT INTO funcionarios (id_funcionario, nome, data_nascimento, sexo, admissao,
 (149, 'Funcionario 149', '1996-09-20', 'feminino', '2021-11-01', NULL, 1600.00, 6, 4, 'Sim'),
 (150, 'Funcionario 150', '1996-10-20', 'masculino', '2021-12-01', NULL, 1650.00, 7, 5, 'Sim');
 
--- Inserindo os dados da tabela de INSS
-
-INSERT INTO tb_inss (faixa_inicial, faixa_final, aliquota) VALUES
-(0, 1500, 7.5),
-(1500.01, 3000, 9),
-(3000.01, 5000, 12),
-(5000.01, 999999, 14);
-
--- Inserindo os dados dos eventos fixos da folha (Gratificação, insalubridade e Periculosidade
-
-INSERT INTO eventos_fixos(nome, valor, percentual, tipo)
-VALUES 
-('Sem beneficio', 0, 0, 'provento'),
-('Gratificacao Dir', 1000.00, 0, 'provento'),
-('Gratificacao Ger', 500.00, 0, 'provento'),
-('Inssalubridade Min', 162.10, 0, 'provento'),
-('Inssalubridade Med', 324.20, 0, 'provento'),
-('Inssalubridade Max', 648.40, 0, 'provento'),
-('Periculosidade', 0, 0.30, 'provento');
-
--- select * from eventos_fixos;
-
+/*
+select * from cargos;
+select * from departamentos;
+select * from eventos_fixos;
+select * from plano_saude;
+select * from tb_inss;
+select * from encargos;
+select * from funcionarios;
+select * from folha_pagamento;
+select * from resumo_folha;
+*/
