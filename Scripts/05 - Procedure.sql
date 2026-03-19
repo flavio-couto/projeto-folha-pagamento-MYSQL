@@ -6,112 +6,128 @@ Procedure para incluir os funcionários na folha de pagamento, vai usar o ID e u
 o funcionário e trazer o salário dele além das outras informações como adicionais, descontos que
 estão em tabelas diferentes.
 */
+-- call gerar_folha(1, '2025-05-01')
+/** 
+SELECT * FROM encargos;
+delete from folha_pagamento
+where id_folha > 0;
+call gerar_folha110('2025-05-01');
+select * from folha_pagamento order by id_funcionario;      
+select * from eventos_fixos;      
+SELECT * FROM folha_pagamento;
+SELECT * FROM eventos_fixos;
+SELECT * FROM fechamento_ponto;
+
+**/
 
 DELIMITER $$
 
-CREATE PROCEDURE gerar_folha(
-    IN p_funcionario INT,
-    IN p_competencia DATE
-)
+CREATE PROCEDURE gerar_folha_mensal(p_competencia DATE)
+
 BEGIN
-    DECLARE v_salario DECIMAL(10,2);
-    DECLARE v_adicionais DECIMAL(10,2);
-    DECLARE v_outros_descontos DECIMAL(10,2);
-    DECLARE v_inss DECIMAL(10,2);
-    DECLARE v_irrf DECIMAL(10,2);
-    DECLARE v_total_proventos DECIMAL(10,2);
-    DECLARE v_total_descontos DECIMAL(10,2);
-    DECLARE v_liquido DECIMAL(10,2);
-    DECLARE v_cargo INT;
-    DECLARE v_fgts DECIMAL(10,2);
-    DECLARE v_inss_empresa DECIMAL(10,2);
-    DECLARE v_terceiros DECIMAL(10,2);
-    
-    DECLARE v_gratificacao DECIMAL(10,2);
-    DECLARE v_insalubridade DECIMAL(10,2);
-    DECLARE v_plano_saude DECIMAL(10,2);
-
-	-- Aqui vai começar a 'SETAR' as variáveis, umas serão por SELECT, outras pelo IF, e outras através du funções que são chamadas como inss e irrf, outras apenas atribuida um valor direto.
-    SELECT salario, id_cargo
-    INTO v_salario, v_cargo
-    FROM funcionarios
-    WHERE id_funcionario = p_funcionario;
-    
-	SELECT gratificacao, insalubridade, plano_saude 
-    INTO v_gratificacao, v_insalubridade, v_plano_saude
-    FROM fixos_folha
-    where id_evento = 1;
-
-    --
-    -- Se o colaborador for atendendente, coletor, copeira ou serviços gerais ele terá direito à insalubridade. 
-    -- Se ele for gerente terá direito à metade da gratificação e se for diretor a gratificação integral.
-    --
-    IF v_cargo between 4 and 7 then
-        SET v_adicionais = v_insalubridade;
-	elseif v_cargo = 8 then
-		SET v_adicionais = v_gratificacao / 2;
-	elseif v_cargo = 9 then
-		SET v_adicionais = v_gratificacao;
-	else
-		SET v_adicionais = 0;
-	END IF;
-    
-    SET v_total_proventos = v_salario + v_adicionais;
-    SET v_inss = calcula_inss(v_salario + v_adicionais);
-    SET v_irrf = calcula_irrf(v_total_proventos - v_inss);
-    
---
--- Outros descontos no momento é só para o plano de saúde. Depedendo do cargo pagará: diretores: 100% / gerentes: 50% / analista e assistente: 33,33% / demais funções: 25%
--- 
-    IF v_cargo between 2 and 3 then
-        SET v_outros_descontos = v_plano_saude / 3;
-    elseif (v_cargo between 4 and 7) or v_cargo = 1 then
-        SET v_outros_descontos = v_plano_saude / 4;
-	elseif v_cargo = 8 then
-		SET v_outros_descontos = v_plano_saude / 2;
-	elseif v_cargo = 9 then
-		SET v_outros_descontos = v_plano_saude;
-	else
-		SET v_outros_descontos = 0;
-	END IF;
-        
-    SET v_total_descontos = v_inss + v_irrf + v_outros_descontos;
-    SET v_liquido = v_total_proventos - v_total_descontos;
-    SET v_fgts = v_total_proventos * 0.08;
-    SET v_inss_empresa = v_total_proventos * 0.20;   
-    SET v_terceiros = v_total_proventos * 0.058;   
-
-    INSERT INTO folha_pagamento (
-        competencia,
-        id_funcionario,
-        salario_base,
-        adicionais,
-        inss,
-        irrf,
-        outros_descontos,
-        total_proventos,
-        total_descontos,
-        liquido,
-        fgts,
-        inss_empresa,
-        terceiros
-    )
-    VALUES (
-        p_competencia,
-        p_funcionario,
-        v_salario,
-        v_adicionais,
-        v_inss,
-        v_irrf,
-        v_outros_descontos,
-        v_total_proventos,
-        v_total_descontos,
-        v_liquido,
-        v_fgts,
-        v_inss_empresa,
-        v_terceiros
-);
-
+	    
+    INSERT INTO folha_pagamento(
+	  competencia,
+      id_funcionario,
+	  salario_base,
+	  gratificacao,
+      insalubridade,
+      periculosidade,
+      he_50,
+      he_100,
+      faltas,
+	  inss,
+	  irrf,
+	  outros_descontos,
+	  total_proventos,
+	  total_descontos,
+	  liquido,
+	  fgts,
+	  inss_empresa,
+	  terceiros)
+      
+	SELECT
+      p_competencia,
+      funcionario_,
+      salario_,
+      
+	-- ADICIONAIS
+      gratificacao_,
+      insalubridade_,
+      periculosidade_,      
+      
+	-- PONTO 
+      he_50_,
+      he_100_,
+      falta_,
+      
+	-- INSS IRRF
+      inss_,
+      irrf_,
+            
+      outros_descontos_,
+      
+	-- Totais
+      total_proventos_,
+      total_descontos_,
+      liquido_,
+      
+	-- Encargos
+      fgts_,
+	  inss_empresa_,
+	  terceiros_
+      
+	FROM 
+		(SELECT
+		  f.id_funcionario as funcionario_,
+		  f.salario as salario_,
+		  
+		  -- ADICIONAIS --
+		  sum(CASE WHEN eventof_id between 2 AND 3 then ef.valor else 0 end) as gratificacao_,
+		  sum(CASE WHEN eventof_id between 4 AND 6 then ef.valor else 0 end) as insalubridade_,
+		  f.salario * sum(CASE WHEN eventof_id = 7 then ef.percentual else 0 end) as periculosidade_,      
+		  
+		  -- PONTO --
+		  sum(case when fp.id_evento_ponto = 1 then fp.valor else 0 END) as he_50_,
+		  sum(case when fp.id_evento_ponto = 2 then fp.valor else 0 END) as he_100_,
+		  sum(case when fp.id_evento_ponto = 3 then fp.valor else 0 END) as falta_,
+		  
+		  -- INSS e IRRF --
+		  calcula_inss(f.salario + sum(ef.valor)) as inss_,
+		  calcula_irrf1(f.id_funcionario, f.salario - calcula_inss(f.salario)) as irrf_,
+          
+          0 as outros_descontos_,
+          
+		  -- Totais --
+          f.salario + sum(ef.valor) + (f.salario * sum(CASE WHEN eventof_id = 7 then ef.percentual else 0 end)) as total_proventos_,
+		  calcula_inss(f.salario + sum(ef.valor)) + calcula_irrf1(f.id_funcionario, f.salario - calcula_inss(f.salario)) as total_descontos_,
+		  f.salario + sum(ef.valor) - (calcula_inss(f.salario + sum(ef.valor)) + calcula_irrf1(f.id_funcionario, f.salario - calcula_inss(f.salario))) as liquido_,
+          
+          -- Encargos -- 
+          
+			-- FGTS
+		  round((f.salario + sum(ef.valor) + (f.salario * sum(CASE WHEN eventof_id = 7 then ef.percentual else 0 end))) * 
+          (select e.percentual from encargos e where e.id_encargo = 1), 2) as fgts_,
+          
+			-- INSS EMPRESA
+		  round((f.salario + sum(ef.valor) + (f.salario * sum(CASE WHEN eventof_id = 7 then ef.percentual else 0 end))) * 
+          (select e.percentual from encargos e where e.id_encargo = 2), 2) as inss_empresa_,
+          
+          -- TERCEIROS
+		  round((f.salario + sum(ef.valor) + (f.salario * sum(CASE WHEN eventof_id = 7 then ef.percentual else 0 end))) * 
+          (select e.percentual from encargos e where e.id_encargo = 3), 2) as terceiros_
+		  
+		  FROM funcionarios f
+		  join funcionario_eventof fe
+		  ON f.id_funcionario = fe.funcionario_id
+		  JOIN eventos_fixos ef
+		  ON ef.id_eventof = fe.eventof_id
+		  LEFT JOIN fechamento_ponto fp
+		  ON fp.id_funcionario = f.id_funcionario
+          
+		  group by f.id_funcionario
+		) as tabela_calculo;
+      
 END $$
 
 DELIMITER ;
@@ -182,36 +198,104 @@ DELIMITER ;
 -- --------------------------------------------------------------------------------------------
 -- --------------------------------------------------------------------------------------------
 -- --------------------------------------------------------------------------------------------
--- Essa última procedure confesso que o chatgpt que fez, não sabia como usar a minha procedura de 
--- gerar a folha de forma automatizada aí ele criou esse looping pra rodar pra todos os funcionários
--- cadastrados
+
+/*
+Procedure para fechar o ponto geral
+Vai pegar as informações da tabela resumo_ponto_mensal e jogar na fechamento_ponto já fazendo os devidos cálculos.
+As informações geradas serão buscadas na procedure e consolidadas na folha de pagamento.
+*/
+-- select * from resumo_ponto
+-- select * from eventos_ponto
+-- select * from fechamento_ponto
 
 DELIMITER $$
 
-CREATE PROCEDURE gerar_folha_mensal (IN p_competencia DATE)
-BEGIN
-    DECLARE done INT DEFAULT FALSE;
-    DECLARE v_funcionario INT;
+CREATE PROCEDURE fecha_ponto(p_competencia DATE)
 
-    DECLARE cursor_func CURSOR FOR
-        SELECT id_funcionario FROM funcionarios;
+begin 
 
-    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = TRUE;
+insert into fechamento_ponto(competencia, id_funcionario, valor_he_50, valor_he_100, valor_falta)
 
-    OPEN cursor_func;
+select 
+	p_competencia,
+	f.id_funcionario,
+    round(sum(case when rp.id_evento_ponto = 1 then (rp.quantidade * ((f.salario / 220) * ep.percentual)) else 0 end), 2),
+    round(sum(case when rp.id_evento_ponto = 2 then (rp.quantidade * ((f.salario / 220) * ep.percentual)) else 0 end), 2),
+    round(sum(case when rp.id_evento_ponto = 3 then (rp.quantidade * (f.salario / 30)) else 0 end), 2)
+FROM funcionarios f
+join resumo_ponto rp
+on rp.id_funcionario = f.id_funcionario
+join eventos_ponto ep
+on ep.id_evento_ponto = rp.id_evento_ponto
+where p_competencia = rp.competencia
+group by f.id_funcionario;
 
-    read_loop: LOOP
-        FETCH cursor_func INTO v_funcionario;
-
-        IF done THEN
-            LEAVE read_loop;
-        END IF;
-
-        CALL gerar_folha(v_funcionario, p_competencia);
-
-    END LOOP;
-
-    CLOSE cursor_func;
 END $$
+
+DELIMITER ;
+
+-- --------------------------------------------------------------------------------------------
+-- --------------------------------------------------------------------------------------------
+-- --------------------------------------------------------------------------------------------
+/*
+Procedure para recalcular o ponto individual.
+Faz basicamente a mesma coisa que a procedure fecha_ponto mas aque servirá para dar um cálculo ou recálculo individual 
+*/
+
+DELIMITER $$
+
+CREATE PROCEDURE fecha_ponto_individual(p_idfuncionario int, p_id_evento int, p_competencia date)
+
+BEGIN
+		DECLARE v_salario decimal(10,2);
+        DECLARE v_quantidade decimal(10,2);
+        DECLARE v_valor decimal(10,2);
+        
+        select salario into v_salario from
+        funcionarios
+        where id_funcionario = p_idfuncionario;
+                
+        select quantidade into v_quantidade
+        from resumo_ponto rp
+        where rp.id_funcionario = p_idfuncionario
+        and rp.id_evento_ponto = p_id_evento
+        and rp.competencia = p_competencia;
+        
+        set v_valor = v_quantidade * 10;
+        
+        insert into fechamento_ponto(competencia, id_funcionario, id_evento_ponto, quantidade, valor)
+        values
+        (p_competencia, p_idfuncionario, p_id_evento, v_quantidade, v_valor);
+
+END $$
+
+
+-- --------------------------------------------------------------------------------------------
+-- --------------------------------------------------------------------------------------------
+-- --------------------------------------------------------------------------------------------
+/*
+Procedure para incluir um funcionáriro
+select * from funcionarios
+CALL inclui_funcionario4('Flavio Couto de Matos', '1985-11-12', 'masculino', '2025-10-15', 69000.00, 9, 9, 4)
+*/
+
+DELIMITER $$
+
+CREATE PROCEDURE inclui_funcionario(
+p_nome varchar(250), p_nascimento date, p_sexo varchar(30), p_admissao date, p_salario decimal(10,2), p_cargo_id int, p_departamento_id int, p_plano_saude int)
+
+BEGIN 
+
+DECLARE v_demissao date;
+DECLARE v_ativo varchar(5);
+
+SET v_demissao = NULL;
+SET v_ativo = 'sim';
+
+insert into funcionarios(nome, data_nascimento, sexo, admissao, demissao, salario, ativo, cargo_id, departamento_id, plano_saude_id)
+VALUES
+(p_nome, p_nascimento, p_sexo, p_admissao, v_demissao, p_salario, v_ativo, p_cargo_id, p_departamento_id, p_plano_saude);
+
+END $$ 
 
 DELIMITER ;

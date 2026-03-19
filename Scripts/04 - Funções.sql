@@ -43,7 +43,7 @@ Quero ajustar na verdade mas não vejo necessidade.
 
 DELIMITER $$
 
-CREATE FUNCTION calcula_irrf5(IDfuncionario INT, valor_apos_desconto_inss DECIMAL(10,2))
+CREATE FUNCTION calcula_irrf1(p_id_funcionario DECIMAL(10,2), valor_apos_desconto_inss DECIMAL(10,2))
 	RETURNS decimal(10,2)
     deterministic
     
@@ -54,12 +54,11 @@ BEGIN
     declare v_desconto_sem_redutor DECIMAL(10,2);
     declare v_redutor DECIMAL(10,2);
     declare resultado varchar(500);
-        
-	select salario
-    INTO v_salario
-    FROM funcionarios
-    WHERE id_funcionario = IDfuncionario;
-        
+    	    
+    select f.salario into v_salario
+    from funcionarios f
+    where p_id_funcionario = f.id_funcionario;
+    
     IF valor_apos_desconto_inss < 5000.00 THEN
 		SET v_desconto_irrf = 0;
     ELSE 
