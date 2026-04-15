@@ -28,14 +28,11 @@ Simular um sistema simplificado de folha de pagamento contendo:
 
 ## 🔄 Próximas etapas
 
-
-- Criar uma tabela intermediária (Funcionário X Plano de Saúde)
 - Melhorar cálculo dos impostos patronais, talvez criar sua própria tabela e seu procedure, ver se dá pra juntar já no cálculo da folha geral
-- Ajustar a procedure do cálculo de folha para adaptar a criação das novas tabelas do plano de saúde e eventos fixos;
 - Criar uma tabela de ausencias ou afastamentos pra poder proporcionalizar as coisas;
 - Histórico salarial (pendente - não sei se vou conseguir, deixar pro futuro)
 - Tabela de ponto diário e procedure para jogar para o resumo
-- Incluir inteligencia para faltas na procedure do fechamento de ponto
+
 - Separar insalubridade de Gratificação de Periculosidade, criar uma tabela pra cada, vai melhorar o select da folha
 - Voltei o modelo da procedure de calculo de folha para adicionais ao inves de beneficios separados, mas futuramente separar com COALESCE
 - Criar Views (Resumo do ponto, Mapa benefícios)
@@ -46,10 +43,13 @@ Simular um sistema simplificado de folha de pagamento contendo:
 ## 🔄 CONCLUÍDOS
 
 - Refatoração da Tabela eventos_fixos (antiga fixos_folha), modelo horizontal para vertical- OK
-- Simulação de encargos (FGTS, INSS empresa) - OK 
-- Cálculo progressivo completo de IRRF - OK;
-- Rafazer o insert de funcionários colocando o código dos eventos fixos e do plano de saúde - OK;
-- 
+- Simulação de encargos (FGTS, INSS empresa) - OK
+- Cálculo progressivo completo de IRRF - OK
+- Rafazer o insert de funcionários colocando o código dos eventos fixos e do plano de saúde - OK
+- Criar uma tabela intermediária (Funcionário X Plano de Saúde) - OK
+- Incluir inteligencia para faltas na procedure do fechamento de ponto - OK
+- Ajustar a procedure do cálculo de folha para adaptar a criação das novas tabelas intermediárias do plano de saúde e eventos fixos - OK
+- Criar todas as procedures para inclusão no banco - OK
 
 
 **** TABELAS ****
@@ -66,13 +66,18 @@ Simular um sistema simplificado de folha de pagamento contendo:
 - Tabela Eventos_ponto - 25/02/2026
 - Tabela Resumo_ponto - 25/02/2026
 - Tabela Fechamento_ponto - 25/02/2026
+- Tabela funcionario_plano - 13/04/2026
+
 
 **** PROCEDURES ****
 
-- gerar_folha(id_funcionario, competencia) - 17/02/2026
-- gerar_folha_mensal(competencia) - 17/02/2026
-- fecha_ponto_individual(p_idfuncionario int, p_id_evento int, p_competencia date) - 25/02/2026
-- fecha_ponto(competencia) - 26/02/2026
+- gerar_folha() - 17/02/2026
+- calcular_folha() - 13/04/2026 - Atualizada para atender a tabela intermediária do plano de saúde
+- fecha_ponto_individual() - 25/02/2026
+- fecha_ponto() - 26/02/2026
+- cadastrar_funcionario(), cadastrar_cargo(), cadastrar_departamento() - 15/04/2026
+- cadastrar_eventos_fixos(), cadastrar_eventos_ponto() - 15/04/2026
+- cadastrar_plano_saude(), cadastrar_encargo() - 15/04/2026
 
 
 **** Funções ****
@@ -94,7 +99,7 @@ já tinha estudado bastante via cursos da Alura ou outros, sempre vi vários con
     Outro conceito já visto bastante mas que não estava totalmente compreendido até agora e consegui entender. Fiz um curso recente sobre modelagem e vi que lá falava sobre o perigo de um relacionamento N:N, na minha cabeça tinha guardado só, "sempre evitar isso" mas no projeto percebi que ele é extremamento necessário no caso das tabelas intermediárias para consolidar informações
 
 - Tabelas intemediárias 
-    Descobri que fugia muito das tabelas, tinha um certo medo de incluir elas pois não entendia também muito a necessidade, hoje já consegui perceber que certas coisas não dá pra fazer sem uma tabela intermediárias, seja por boas práticas ou por escalabilidade ou por boas práticas, ela são parte importante do projeto pro ponto, pros benefícios
+    Descobri que fugia muito dessas tabelas, tinha um certo medo de incluir elas pois não entendia também muito a necessidade, hoje já consegui perceber que certas coisas não dá pra fazer sem uma tabela intermediárias, seja por boas práticas ou por escalabilidade ou por boas práticas, ela são parte importante do projeto pro ponto, pros benefícios
 
 - Procedure
     Já tinha feito umas 3 ou 4 nos cursos entendo ali o que estava sendo escrito, o que estava fazendo mas como disse se pedisse pra eu fazer até sabia o que deveria ser feito mas não conseguia traduzir em código, hoje entendo bem a estrutura dela, no caso de declarar as variavéis, setar as variáveis de diversas formas (através de select, um IF ou um cálculo qualquer) e depois inserilas na tabela correspondente, tem usado elas pra fechar o ponto, e principalmente pro cálculo da folha.

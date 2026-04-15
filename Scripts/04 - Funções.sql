@@ -1,11 +1,11 @@
-
--- --------------------------------------------------------------------------------------------
--- --------------------------------------------------------------------------------------------
--- --------------------------------------------------------------------------------------------
-/* 
-Função para calcular INSS
+/*
+----------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------
+---	FUNÇÃO PARA CALCULAR INSS ---
 Ela vai buscar na tabela de INSS (tb_inss) a aliquota filtrando o salario que foi informado se está entre o valor minimo e calor maximo de cada faixa, 
 depois faz o cáluclo do salário * a alíquota 
+----------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------
 */
 
 DELIMITER $$
@@ -30,15 +30,16 @@ END $$
 
 DELIMITER ;
 
--- --------------------------------------------------------------------------------------------
--- --------------------------------------------------------------------------------------------
--- --------------------------------------------------------------------------------------------
 
 /* 
-Função para calcular IRRF
+----------------------------------------------------------------------------------------------
+-- --------------------------------------------------------------------------------------------
+--- FUNÇÃO PARA CALCULAR O IRRF ---
 Ela faz o cálculo mais complexo conforme a legislação, preciso apenas confirmar se usei o modelo correto pois tem muita informação divergente sobre o novo cálculo do INSSvai buscar na tabela.
 Como a alíquota ou é 0 ou é 27.5% eu coloquei o cálculo todo dentro da função, diferente da do INSS que ele busca as alíquotas numa tabela separada.
 Quero ajustar na verdade mas não vejo necessidade.
+-- --------------------------------------------------------------------------------------------
+-- --------------------------------------------------------------------------------------------
 */
 
 DELIMITER $$
@@ -73,34 +74,3 @@ BEGIN
 END $$
 
 DELIMITER ;
-
--- ------------------------------------------
--- ------------------------------------------
--- ------------------------------------------
-
-/* 
-Função para calcular IRRF
-Essa eu tinha feito de forma bruta, se ganha acima de 5.000,00 é aplicado 27,5% se for menos não tem desconto, sei que não funciona assim mas fica pra uma futura melhoria.
-Vou deixar de histórico
-
-
-DELIMITER $$
-
-CREATE FUNCTION calcula_irrf(p_salario DECIMAL(10,2))
-RETURNS DECIMAL(10,2)
-DETERMINISTIC
-BEGIN
-    DECLARE v_valor_irrf DECIMAL(10,2);
-
-    IF p_salario < 5000 then
-		SET v_valor_irrf = 0;
-	ELSE
-		SET v_valor_irrf = p_salario * 0.275;
-	end if;
-
-    RETURN v_valor_irrf;
-END $$
-
-DELIMITER ;
-
-*/

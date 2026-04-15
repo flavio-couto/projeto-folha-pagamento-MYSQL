@@ -6,23 +6,25 @@ Procedure para incluir os funcionários na folha de pagamento, vai usar o ID e u
 o funcionário e trazer o salário dele além das outras informações como adicionais, descontos que
 estão em tabelas diferentes.
 */
--- call gerar_folha(1, '2025-05-01')
+-- call calcular_folha('2025-05-01')
 /** 
 SELECT * FROM encargos;
 delete from folha_pagamento
 where id_folha > 0;
-call gerar_folha110('2025-05-01');
+call fecha_ponto('2025-05-01');
+call calcular_folha('2025-05-01');
 select * from folha_pagamento order by id_funcionario;      
 select * from eventos_fixos;      
 SELECT * FROM folha_pagamento;
 SELECT * FROM eventos_fixos;
 SELECT * FROM fechamento_ponto;
+SELECT * FROM resumo_ponto;
 
 **/
 
 DELIMITER $$
 
-CREATE PROCEDURE gerar_folha_mensal(p_competencia DATE)
+CREATE PROCEDURE calcular_folha(p_competencia DATE)
 
 BEGIN
 	    
@@ -36,9 +38,10 @@ BEGIN
       he_50,
       he_100,
       faltas,
+      plano_saude,
+      outros_descontos,
 	  inss,
-	  irrf,
-	  outros_descontos,
+	  irrf,	  
 	  total_proventos,
 	  total_descontos,
 	  liquido,
@@ -61,12 +64,16 @@ BEGIN
       he_100_,
       falta_,
       
+      -- PLANO DE SAUDE
+      plano_saude_,
+      
+      -- OUTROS DESCONTOS      
+      outros_descontos_,     
+      
 	-- INSS IRRF
       inss_,
       irrf_,
-            
-      outros_descontos_,
-      
+           
 	-- Totais
       total_proventos_,
       total_descontos_,
@@ -83,48 +90,56 @@ BEGIN
 		  f.salario as salario_,
 		  
 		  -- ADICIONAIS --
-		  sum(CASE WHEN eventof_id between 2 AND 3 then ef.valor else 0 end) as gratificacao_,
-		  sum(CASE WHEN eventof_id between 4 AND 6 then ef.valor else 0 end) as insalubridade_,
+		  max(CASE WHEN eventof_id between 2 AND 3 then ef.valor else 0 end) as gratificacao_,
+		  max(CASE WHEN eventof_id between 4 AND 6 then ef.valor else 0 end) as insalubridade_,
 		  f.salario * sum(CASE WHEN eventof_id = 7 then ef.percentual else 0 end) as periculosidade_,      
 		  
 		  -- PONTO --
-		  sum(case when fp.id_evento_ponto = 1 then fp.valor else 0 END) as he_50_,
-		  sum(case when fp.id_evento_ponto = 2 then fp.valor else 0 END) as he_100_,
-		  sum(case when fp.id_evento_ponto = 3 then fp.valor else 0 END) as falta_,
+		  coalesce(max(fp.valor_he_50), 0) as he_50_,
+		  coalesce(max(fp.valor_he_100), 0) as he_100_,
+		  coalesce(max(fp.valor_falta), 0) as falta_,
 		  
-		  -- INSS e IRRF --
-		  calcula_inss(f.salario + sum(ef.valor)) as inss_,
-		  calcula_irrf1(f.id_funcionario, f.salario - calcula_inss(f.salario)) as irrf_,
+          -- PLANO DE SAUDE --
           
+          max(ps.parte_colaborador) as plano_saude_,
+          
+          -- OUTROS DESCONTOS
           0 as outros_descontos_,
           
+		  -- INSS e IRRF --
+		  calcula_inss(f.salario + coalesce(sum(ef.valor), 0)) as inss_,
+		  calcula_irrf1(f.id_funcionario, f.salario - calcula_inss(f.salario)) as irrf_,
+                            
 		  -- Totais --
-          f.salario + sum(ef.valor) + (f.salario * sum(CASE WHEN eventof_id = 7 then ef.percentual else 0 end)) as total_proventos_,
-		  calcula_inss(f.salario + sum(ef.valor)) + calcula_irrf1(f.id_funcionario, f.salario - calcula_inss(f.salario)) as total_descontos_,
-		  f.salario + sum(ef.valor) - (calcula_inss(f.salario + sum(ef.valor)) + calcula_irrf1(f.id_funcionario, f.salario - calcula_inss(f.salario))) as liquido_,
+          f.salario + coalesce(sum(ef.valor), 0) + (f.salario * sum(CASE WHEN eventof_id = 7 then ef.percentual else 0 end)) as total_proventos_,
+		  calcula_inss(f.salario + coalesce(sum(ef.valor), 0)) + calcula_irrf1(f.id_funcionario, f.salario - calcula_inss(f.salario)) as total_descontos_,
+		  f.salario + coalesce(sum(ef.valor), 0) - (calcula_inss(f.salario + coalesce(sum(ef.valor), 0)) + calcula_irrf1(f.id_funcionario, f.salario - calcula_inss(f.salario))) as liquido_,
           
           -- Encargos -- 
           
 			-- FGTS
-		  round((f.salario + sum(ef.valor) + (f.salario * sum(CASE WHEN eventof_id = 7 then ef.percentual else 0 end))) * 
+		  round((f.salario + coalesce(sum(ef.valor), 0) + (f.salario * sum(CASE WHEN eventof_id = 7 then ef.percentual else 0 end))) * 
           (select e.percentual from encargos e where e.id_encargo = 1), 2) as fgts_,
           
 			-- INSS EMPRESA
-		  round((f.salario + sum(ef.valor) + (f.salario * sum(CASE WHEN eventof_id = 7 then ef.percentual else 0 end))) * 
+		  round((f.salario + coalesce(sum(ef.valor), 0) + (f.salario * sum(CASE WHEN eventof_id = 7 then ef.percentual else 0 end))) * 
           (select e.percentual from encargos e where e.id_encargo = 2), 2) as inss_empresa_,
           
           -- TERCEIROS
-		  round((f.salario + sum(ef.valor) + (f.salario * sum(CASE WHEN eventof_id = 7 then ef.percentual else 0 end))) * 
+		  round((f.salario + coalesce(sum(ef.valor), 0) + (f.salario * sum(CASE WHEN eventof_id = 7 then ef.percentual else 0 end))) * 
           (select e.percentual from encargos e where e.id_encargo = 3), 2) as terceiros_
 		  
 		  FROM funcionarios f
-		  join funcionario_eventof fe
+		  LEFT JOIN  funcionario_eventof fe
 		  ON f.id_funcionario = fe.funcionario_id
-		  JOIN eventos_fixos ef
+		  LEFT JOIN eventos_fixos ef
 		  ON ef.id_eventof = fe.eventof_id
 		  LEFT JOIN fechamento_ponto fp
-		  ON fp.id_funcionario = f.id_funcionario
-          
+		  ON f.id_funcionario = fp.id_funcionario
+          LEFT JOIN funcionario_plano fps
+          ON f.id_funcionario = fps.funcionario_id
+          LEFT JOIN plano_saude ps
+          ON ps.id_planoS = fps.plano_saude_id
 		  group by f.id_funcionario
 		) as tabela_calculo;
       
@@ -269,33 +284,3 @@ BEGIN
 
 END $$
 
-
--- --------------------------------------------------------------------------------------------
--- --------------------------------------------------------------------------------------------
--- --------------------------------------------------------------------------------------------
-/*
-Procedure para incluir um funcionáriro
-select * from funcionarios
-CALL inclui_funcionario4('Flavio Couto de Matos', '1985-11-12', 'masculino', '2025-10-15', 69000.00, 9, 9, 4)
-*/
-
-DELIMITER $$
-
-CREATE PROCEDURE inclui_funcionario(
-p_nome varchar(250), p_nascimento date, p_sexo varchar(30), p_admissao date, p_salario decimal(10,2), p_cargo_id int, p_departamento_id int, p_plano_saude int)
-
-BEGIN 
-
-DECLARE v_demissao date;
-DECLARE v_ativo varchar(5);
-
-SET v_demissao = NULL;
-SET v_ativo = 'sim';
-
-insert into funcionarios(nome, data_nascimento, sexo, admissao, demissao, salario, ativo, cargo_id, departamento_id, plano_saude_id)
-VALUES
-(p_nome, p_nascimento, p_sexo, p_admissao, v_demissao, p_salario, v_ativo, p_cargo_id, p_departamento_id, p_plano_saude);
-
-END $$ 
-
-DELIMITER ;
